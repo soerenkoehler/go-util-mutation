@@ -1,0 +1,8 @@
+workDir: .go-util-mutation/tmp
+
+excludeFromCopy:
+  - .git
+  - .go-util-mutation
+
+excludeFromMutation:
+  - main.go

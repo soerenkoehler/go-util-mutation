@@ -1,8 +1,9 @@
 package main
 
 import (
+	_ "embed"
+	"fmt"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"io/fs"
@@ -16,14 +17,38 @@ const (
 )
 
 var (
-	// embed: default.yaml
-	_defaultConfiguration string
+	//go:embed default.yaml
+	_defaultConfiguration []byte
 )
 
 func main() {
-	for _, file := range createAST(".") {
-		format.Node(os.Stdout, token.NewFileSet(), file)
+	var configFile string
+	if len(os.Args) == 1 {
+		configFile = DefaultConfig
+	} else if len(os.Args) == 2 {
+		configFile = os.Args[1]
+	} else {
+		panic("Usage: go run soerenkoehler.de/go-util-mutation <config-name>")
 	}
+
+	configFile = path.Join(ConfigFolder, configFile)
+
+	if _, err := os.Stat(configFile); err != nil {
+		os.MkdirAll(ConfigFolder, 0755)
+		os.WriteFile(configFile, _defaultConfiguration, 0644)
+	}
+
+	fmt.Printf("%v\n", _defaultConfiguration)
+
+	if config, err := os.ReadFile(configFile); err != nil {
+		panic(err)
+	} else {
+		fmt.Printf("%v\n", config)
+	}
+
+	// for _, file := range createAST(".") {
+	// 	format.Node(os.Stdout, token.NewFileSet(), file)
+	// }
 }
 
 func createAST(dir string) map[string]*ast.File {

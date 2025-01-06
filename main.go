@@ -1,50 +1,31 @@
 package main
 
 import (
-	_ "embed"
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/fs"
 	"os"
 	"path"
-)
 
-const (
-	ConfigFolder  = ".go-util-mutation"
-	DefaultConfig = "default.yaml"
-)
-
-var (
-	//go:embed default.yaml
-	_defaultConfiguration []byte
+	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
 func main() {
+	util.InitLogger(os.Stdout)
+	util.SetLogLevel(util.LOG_INFO)
+
 	var configFile string
+
 	if len(os.Args) == 1 {
-		configFile = DefaultConfig
+		configFile = util.ConfigFileDefault
 	} else if len(os.Args) == 2 {
 		configFile = os.Args[1]
 	} else {
-		panic("Usage: go run soerenkoehler.de/go-util-mutation <config-name>")
+		util.Fatal("Usage: go run soerenkoehler.de/go-util-mutation <config-name>")
 	}
 
-	configFile = path.Join(ConfigFolder, configFile)
-
-	if _, err := os.Stat(configFile); err != nil {
-		os.MkdirAll(ConfigFolder, 0755)
-		os.WriteFile(configFile, _defaultConfiguration, 0644)
-	}
-
-	fmt.Printf("%v\n", _defaultConfiguration)
-
-	if config, err := os.ReadFile(configFile); err != nil {
-		panic(err)
-	} else {
-		fmt.Printf("%v\n", config)
-	}
+	util.Config.Load(configFile)
 
 	// for _, file := range createAST(".") {
 	// 	format.Node(os.Stdout, token.NewFileSet(), file)

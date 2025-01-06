@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -16,20 +17,28 @@ func main() {
 	util.SetLogLevel(util.LOG_INFO)
 
 	var configFile string
-
-	if len(os.Args) == 1 {
-		configFile = util.ConfigFileDefault
-	} else if len(os.Args) == 2 {
-		configFile = os.Args[1]
-	} else {
-		util.Fatal("Usage: go run soerenkoehler.de/go-util-mutation <config-name>")
-	}
-
-	util.Config.Load(configFile)
+	chain := util.ChainContext{}
+	chain.Chain(func() {
+		configFile, chain.Err = getConfigName()
+		if configFile == "" {
+			fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
+		}
+	}).Chain(func() {
+		chain.Err = util.Config.Load(configFile)
+	}).ChainError("Error")
 
 	// for _, file := range createAST(".") {
 	// 	format.Node(os.Stdout, token.NewFileSet(), file)
 	// }
+}
+
+func getConfigName() (string, error) {
+	if len(os.Args) == 1 {
+		return util.ConfigFileDefault, nil
+	} else if len(os.Args) == 2 {
+		return os.Args[1], nil
+	}
+	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
 }
 
 func createAST(dir string) map[string]*ast.File {

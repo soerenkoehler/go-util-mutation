@@ -27,9 +27,14 @@ var Config *ConfigData
 func (cfg *ConfigData) Load(filename string) error {
 	configFile := path.Join(WorkFolder, filename)
 
-	if _, err := os.Stat(configFile); err != nil {
-		os.MkdirAll(WorkFolder, 0755)
-		os.WriteFile(configFile, _defaultConfiguration, 0644)
+	if _, err := os.Stat(WorkFolder); err != nil {
+		os.MkdirAll(
+			WorkFolder,
+			0755)
+		os.WriteFile(
+			path.Join(WorkFolder, ConfigFileDefault),
+			_defaultConfiguration,
+			0644)
 	}
 
 	data := []byte{}

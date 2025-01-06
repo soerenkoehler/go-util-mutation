@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/soerenkoehler/go-util-mutation/common"
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
@@ -24,7 +25,7 @@ func main() {
 			fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
 		}
 	}).Chain(func() {
-		chain.Err = util.Config.Load(configFile)
+		chain.Err = common.Config.Load(configFile)
 	}).ChainError("Error")
 
 	// for _, file := range createAST(".") {
@@ -34,7 +35,7 @@ func main() {
 
 func getConfigName() (string, error) {
 	if len(os.Args) == 1 {
-		return util.ConfigFileDefault, nil
+		return common.ConfigFileDefault, nil
 	} else if len(os.Args) == 2 {
 		return os.Args[1], nil
 	}

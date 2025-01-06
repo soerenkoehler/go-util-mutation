@@ -1,10 +1,12 @@
-package util
+package common
 
 import (
 	_ "embed"
 	"encoding/json"
 	"os"
 	"path"
+
+	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
 const (
@@ -38,7 +40,7 @@ func (cfg *ConfigData) Load(filename string) error {
 	}
 
 	data := []byte{}
-	chain := &ChainContext{}
+	chain := &util.ChainContext{}
 
 	return chain.Chain(func() {
 		data, chain.Err = os.ReadFile(configFile)

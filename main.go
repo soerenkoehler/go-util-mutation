@@ -17,32 +17,24 @@ func main() {
 	util.InitLogger(os.Stdout)
 	util.SetLogLevel(util.LOG_INFO)
 
-	var configFile, mutationDir string
-	chain := util.ChainContext{}
+	var configFile string
 
-	chain.Chain(func() {
-		configFile, chain.Err = getConfigName()
-		if configFile == "" {
-			fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
-		}
-	}).Chain(func() {
-		chain.Err = common.Config.Load(configFile)
-	}).Chain(func() {
-		mutationDir = path.Join(common.WorkFolder, "tmp")
-		chain.Err = os.RemoveAll(mutationDir)
-	}).Chain(func() {
-		for file := range util.ReadDir(".") {
-			if path.Ext(file) == ".go" {
-				chain.Chain(func() {
-					chain.Err = util.CopyFile(".", mutationDir, file)
-				})
-			}
-		}
-	}).ChainError("Error")
+	configFile, err := getConfigName()
+	if configFile == "" {
+		fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
+	}
 
-	// for _, file := range createAST(".") {
-	// 	format.Node(os.Stdout, token.NewFileSet(), file)
-	// }
+	if err == nil {
+		err = common.Config.Load(configFile)
+	}
+
+	if err == nil {
+		err = initMutationfolder()
+	}
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+	}
 }
 
 func getConfigName() (string, error) {
@@ -52,6 +44,20 @@ func getConfigName() (string, error) {
 		return os.Args[1], nil
 	}
 	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
+}
+
+func initMutationfolder() (err error) {
+	mutationDir := path.Join(common.WorkDir, "tmp")
+
+	err = os.RemoveAll(common.MutationDir)
+	if err == nil {
+		for file := range util.ReadDir(".") {
+			if path.Ext(file) == ".go" && err == nil {
+				err = util.CopyFile(".", mutationDir, file)
+			}
+		}
+	}
+	return
 }
 
 func createAST(dir string) map[string]*ast.File {

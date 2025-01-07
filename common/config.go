@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"os"
 	"path"
-
-	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
 const (
-	WorkFolder        = ".go-util-mutation"
+	WorkDir           = ".go-util-mutation"
+	MutationDir       = WorkDir + "/tmp"
 	ConfigFileDefault = "default.json"
 )
 
@@ -26,25 +25,29 @@ type ConfigData struct {
 
 var Config *ConfigData
 
-func (cfg *ConfigData) Load(filename string) error {
-	configFile := path.Join(WorkFolder, filename)
+func (cfg *ConfigData) Load(filename string) (err error) {
+	if path.Ext(filename) == "" {
+		filename += ".json"
+	}
+	configFile := path.Join(WorkDir, filename)
 
-	if _, err := os.Stat(WorkFolder); err != nil {
+	_, err = os.Stat(WorkDir)
+
+	if err != nil {
 		os.MkdirAll(
-			WorkFolder,
+			WorkDir,
 			0755)
 		os.WriteFile(
-			path.Join(WorkFolder, ConfigFileDefault),
+			path.Join(WorkDir, ConfigFileDefault),
 			_defaultConfiguration,
 			0644)
 	}
 
-	data := []byte{}
-	chain := &util.ChainContext{}
+	data, err := os.ReadFile(configFile)
 
-	return chain.Chain(func() {
-		data, chain.Err = os.ReadFile(configFile)
-	}).Chain(func() {
-		chain.Err = json.Unmarshal(data, &Config)
-	}).Err
+	if err == nil {
+		err = json.Unmarshal(data, &Config)
+	}
+
+	return
 }

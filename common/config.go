@@ -3,6 +3,7 @@ package common
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 )
@@ -31,23 +32,28 @@ func (cfg *ConfigData) Load(filename string) (err error) {
 	}
 	configFile := path.Join(WorkDir, filename)
 
-	_, err = os.Stat(WorkDir)
+	if _, err = os.Stat(configFile); os.IsNotExist(err) {
+		err = os.WriteFile(configFile, _defaultConfiguration, 0644)
+	}
 
 	if err != nil {
-		os.MkdirAll(
-			WorkDir,
-			0755)
-		os.WriteFile(
-			path.Join(WorkDir, ConfigFileDefault),
-			_defaultConfiguration,
-			0644)
+		return
 	}
 
 	data, err := os.ReadFile(configFile)
 
-	if err == nil {
-		err = json.Unmarshal(data, &Config)
+	if err != nil {
+		return
 	}
 
-	return
+	return json.Unmarshal(data, &Config)
+}
+
+func GetConfigName() (string, error) {
+	if len(os.Args) == 1 {
+		return ConfigFileDefault, nil
+	} else if len(os.Args) == 2 {
+		return os.Args[1], nil
+	}
+	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
 }

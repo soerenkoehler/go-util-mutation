@@ -19,9 +19,13 @@ func main() {
 
 	var configFile string
 
-	configFile, err := getConfigName()
+	configFile, err := common.GetConfigName()
 	if configFile == "" {
 		fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
+	}
+
+	if err == nil {
+		err = common.InitWorkspace()
 	}
 
 	if err == nil {
@@ -29,35 +33,12 @@ func main() {
 	}
 
 	if err == nil {
-		err = initMutationfolder()
+		err = common.InitMutationDir()
 	}
 
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		util.Error("%v\n", err)
 	}
-}
-
-func getConfigName() (string, error) {
-	if len(os.Args) == 1 {
-		return common.ConfigFileDefault, nil
-	} else if len(os.Args) == 2 {
-		return os.Args[1], nil
-	}
-	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
-}
-
-func initMutationfolder() (err error) {
-	mutationDir := path.Join(common.WorkDir, "tmp")
-
-	err = os.RemoveAll(common.MutationDir)
-	if err == nil {
-		for file := range util.ReadDir(".") {
-			if path.Ext(file) == ".go" && err == nil {
-				err = util.CopyFile(".", mutationDir, file)
-			}
-		}
-	}
-	return
 }
 
 func createAST(dir string) map[string]*ast.File {

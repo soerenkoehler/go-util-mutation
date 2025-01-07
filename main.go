@@ -17,8 +17,9 @@ func main() {
 	util.InitLogger(os.Stdout)
 	util.SetLogLevel(util.LOG_INFO)
 
-	var configFile string
+	var configFile, mutationDir string
 	chain := util.ChainContext{}
+
 	chain.Chain(func() {
 		configFile, chain.Err = getConfigName()
 		if configFile == "" {
@@ -26,6 +27,17 @@ func main() {
 		}
 	}).Chain(func() {
 		chain.Err = common.Config.Load(configFile)
+	}).Chain(func() {
+		mutationDir = path.Join(common.WorkFolder, "tmp")
+		chain.Err = os.RemoveAll(mutationDir)
+	}).Chain(func() {
+		for file := range util.ReadDir(".") {
+			if path.Ext(file) == ".go" {
+				chain.Chain(func() {
+					chain.Err = util.CopyFile(".", mutationDir, file)
+				})
+			}
+		}
 	}).ChainError("Error")
 
 	// for _, file := range createAST(".") {

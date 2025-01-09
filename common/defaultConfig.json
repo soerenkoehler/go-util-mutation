@@ -1,6 +1,6 @@
 {
     "copy": [
-        "README.md"
+        "**/*.go"
     ],
     "dontMutate": [
         "main.go"

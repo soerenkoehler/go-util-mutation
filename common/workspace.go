@@ -2,7 +2,6 @@ package common
 
 import (
 	"os"
-	"path"
 
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
@@ -15,10 +14,10 @@ func InitWorkspace() (err error) {
 }
 
 func InitMutationDir() (err error) {
-	if err = os.RemoveAll(MutationDir); err == nil {
-		for file := range util.ReadDir(".") {
-			if path.Ext(file) == ".go" && err == nil {
-				err = util.CopyFile(".", MutationDir, file)
+	if err = os.RemoveAll(MutationDir); err == nil || os.IsNotExist(err) {
+		for _, pattern := range Config.Copy {
+			if err == nil {
+				err = util.GlobCopy(".", MutationDir, pattern)
 			}
 		}
 	}

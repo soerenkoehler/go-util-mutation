@@ -3,44 +3,43 @@ package util
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path"
+
+	"github.com/bmatcuk/doublestar/v4"
 )
 
-func ReadDir(path string) <-chan string {
-	files := make(chan string)
-
-	go func() {
-		defer close(files)
-		if err := fs.WalkDir(
-			os.DirFS(path),
-			".",
-			func(path string, entry fs.DirEntry, err error) error {
-				if err != nil {
-					return err
-				}
-				if !entry.IsDir() {
-					files <- path
-				}
-				return nil
-			}); err != nil {
-			panic(err)
+func GlobCopy(srcDir, dstDir, pattern string) (err error) {
+	files, err := doublestar.Glob(os.DirFS(srcDir), pattern)
+	for _, file := range files {
+		if err == nil {
+			if isDir, copyErr := copyFile(srcDir, dstDir, file); isDir {
+				err = GlobCopy(srcDir, dstDir, path.Join(file, "**"))
+			} else {
+				err = copyErr
+			}
 		}
-	}()
-
-	return files
+	}
+	return
 }
 
-func CopyFile(srcDir, dstDir, file string) (err error) {
+func copyFile(srcDir, dstDir, file string) (isDir bool, err error) {
+	Debug("src=%v dst=%v file=%v", srcDir, dstDir, file)
+
 	src := path.Join(srcDir, file)
 
 	sfi, err := os.Stat(src)
 	if err != nil {
 		return
 	}
+	if sfi.IsDir() {
+		return true, nil
+	}
 	if !sfi.Mode().IsRegular() {
-		return fmt.Errorf("CopyFile: non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
+		return false, fmt.Errorf(
+			"CopyFile: non-regular source file %s (%q)",
+			sfi.Name(),
+			sfi.Mode().String())
 	}
 
 	dst := path.Join(dstDir, file)
@@ -57,7 +56,10 @@ func CopyFile(srcDir, dstDir, file string) (err error) {
 		}
 	} else {
 		if !(dfi.Mode().IsRegular()) {
-			return fmt.Errorf("CopyFile: non-regular destination file %s (%q)", dfi.Name(), dfi.Mode().String())
+			return false, fmt.Errorf(
+				"CopyFile: non-regular destination file %s (%q)",
+				dfi.Name(),
+				dfi.Mode().String())
 		}
 
 		if os.SameFile(sfi, dfi) {
@@ -65,8 +67,7 @@ func CopyFile(srcDir, dstDir, file string) (err error) {
 		}
 	}
 
-	err = copyFileContents(src, dst)
-	return
+	return false, copyFileContents(src, dst)
 }
 
 func copyFileContents(src, dst string) (err error) {

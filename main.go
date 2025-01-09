@@ -15,7 +15,7 @@ import (
 
 func main() {
 	util.InitLogger(os.Stdout)
-	util.SetLogLevel(util.LOG_INFO)
+	util.SetLogLevel(util.LOG_DEBUG)
 
 	var configFile string
 

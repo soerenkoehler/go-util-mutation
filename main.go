@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -17,19 +18,21 @@ func main() {
 	util.InitLogger(os.Stdout)
 	util.SetLogLevel(util.LOG_DEBUG)
 
-	var configFile string
+	flag.Usage = func() {
+		fmt.Printf("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]\n")
+	}
+	flag.Parse()
 
-	configFile, err := common.GetConfigName()
-	if configFile == "" {
-		fmt.Println("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]")
+	var err error
+	var printUsage bool
+
+	if flag.NArg() > 1 {
+		err = fmt.Errorf("too many arguments")
+		printUsage = true
 	}
 
 	if err == nil {
-		err = common.InitWorkspace()
-	}
-
-	if err == nil {
-		err = common.Config.Load(configFile)
+		err = common.InitWorkspace(flag.Arg(0))
 	}
 
 	if err == nil {
@@ -37,7 +40,12 @@ func main() {
 	}
 
 	if err != nil {
-		util.Error("%v\n", err)
+		util.Error("%v", err)
+	}
+
+	if printUsage {
+		flag.Usage()
+		os.Exit(2)
 	}
 }
 

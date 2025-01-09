@@ -1,15 +1,42 @@
 package common
 
 import (
+	_ "embed"
+	"encoding/json"
+	"fmt"
 	"os"
+	"path"
 
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
-func InitWorkspace() (err error) {
+const (
+	WorkDir           = ".go-util-mutation"
+	MutationDir       = WorkDir + "/tmp"
+	ConfigFileDefault = "default.json"
+)
+
+var (
+	//go:embed defaultConfig.json
+	_defaultConfiguration []byte
+)
+
+type ConfigData struct {
+	Copy       []string
+	DontMutate []string
+}
+
+var Config *ConfigData
+
+func InitWorkspace(configFile string) (err error) {
 	if _, err = os.Stat(WorkDir); os.IsNotExist(err) {
 		err = os.MkdirAll(WorkDir, 0755)
 	}
+
+	if err == nil {
+		err = Config.load(configFile)
+	}
+
 	return
 }
 
@@ -22,4 +49,31 @@ func InitMutationDir() (err error) {
 		}
 	}
 	return
+}
+
+func (cfg *ConfigData) load(filename string) (err error) {
+	if path.Ext(filename) == "" {
+		filename += ".json"
+	}
+	configFile := path.Join(WorkDir, filename)
+
+	if _, err = os.Stat(configFile); os.IsNotExist(err) {
+		err = os.WriteFile(configFile, _defaultConfiguration, 0644)
+	}
+
+	if err != nil {
+		return
+	}
+
+	data, err := os.ReadFile(configFile)
+
+	if err != nil {
+		return
+	}
+
+	return json.Unmarshal(data, &Config)
+}
+
+func GetConfigName() (string, error) {
+	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
 }

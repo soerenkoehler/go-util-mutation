@@ -5,6 +5,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/go-util-mutation/common"
+	"github.com/soerenkoehler/go-util-mutation/mutator"
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
@@ -29,6 +30,10 @@ func main() {
 
 	if err == nil {
 		err = common.InitMutationDir()
+	}
+
+	if err == nil {
+		err = mutator.MutateFiles()
 	}
 
 	if err != nil {

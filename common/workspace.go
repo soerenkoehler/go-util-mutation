@@ -30,6 +30,7 @@ var Config *ConfigData
 
 func InitWorkspace(configFile string) (err error) {
 	if _, err = os.Stat(WorkDir); os.IsNotExist(err) {
+		util.Debug("Creating workspace directory %s", WorkDir)
 		err = os.MkdirAll(WorkDir, 0755)
 	}
 
@@ -58,6 +59,7 @@ func (cfg *ConfigData) load(filename string) (err error) {
 	configFile := path.Join(WorkDir, filename)
 
 	if _, err = os.Stat(configFile); os.IsNotExist(err) {
+		util.Debug("Initialize configuration file %s", configFile)
 		err = os.WriteFile(configFile, _defaultConfiguration, 0644)
 	}
 

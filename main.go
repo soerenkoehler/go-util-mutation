@@ -1,42 +1,31 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"io/fs"
 	"os"
-	"path"
 
 	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/go-util-mutation/common"
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
+var CLI struct {
+	Verbose    bool   `short:"v" help:"Output diagnostic info."`
+	ConfigFile string `arg:"" help:"Configuration name. Will be created if it does not exist." optional:"true" default:"default"`
+}
+
 func main() {
-	println(kong.Kong)
+	kong.Parse(
+		&CLI,
+		kong.UsageOnError())
 
 	util.InitLogger(os.Stdout)
-	util.SetLogLevel(util.LOG_DEBUG)
-
-	flag.Usage = func() {
-		fmt.Printf("Usage: go run soerenkoehler.de/go-util-mutation [CONFIG-NAME]\n")
-	}
-	flag.Parse()
-
-	var err error
-	var printUsage bool
-
-	if flag.NArg() > 1 {
-		err = fmt.Errorf("too many arguments")
-		printUsage = true
+	if CLI.Verbose {
+		util.SetLogLevel(util.LOG_DEBUG)
+	} else {
+		util.SetLogLevel(util.LOG_INFO)
 	}
 
-	if err == nil {
-		err = common.InitWorkspace(flag.Arg(0))
-	}
+	err := common.InitWorkspace(CLI.ConfigFile)
 
 	if err == nil {
 		err = common.InitMutationDir()
@@ -45,45 +34,40 @@ func main() {
 	if err != nil {
 		util.Error("%v", err)
 	}
-
-	if printUsage {
-		flag.Usage()
-		os.Exit(2)
-	}
 }
 
-func createAST(dir string) map[string]*ast.File {
-	files := make(chan string)
+// func createAST(dir string) map[string]*ast.File {
+// 	files := make(chan string)
 
-	go func() {
-		defer close(files)
-		if err := fs.WalkDir(
-			os.DirFS(dir),
-			".",
-			func(path string, entry fs.DirEntry, err error) error {
-				if err != nil {
-					return err
-				}
-				if !entry.IsDir() {
-					files <- path
-				}
-				return nil
-			}); err != nil {
-			panic(err)
-		}
-	}()
+// 	go func() {
+// 		defer close(files)
+// 		if err := fs.WalkDir(
+// 			os.DirFS(dir),
+// 			".",
+// 			func(path string, entry fs.DirEntry, err error) error {
+// 				if err != nil {
+// 					return err
+// 				}
+// 				if !entry.IsDir() {
+// 					files <- path
+// 				}
+// 				return nil
+// 			}); err != nil {
+// 			panic(err)
+// 		}
+// 	}()
 
-	result := map[string]*ast.File{}
+// 	result := map[string]*ast.File{}
 
-	for file := range files {
-		if path.Ext(file) == ".go" {
-			if ast, err := parser.ParseFile(token.NewFileSet(), file, nil, 0); err != nil {
-				panic(err)
-			} else {
-				result[file] = ast
-			}
-		}
-	}
+// 	for file := range files {
+// 		if path.Ext(file) == ".go" {
+// 			if ast, err := parser.ParseFile(token.NewFileSet(), file, nil, 0); err != nil {
+// 				panic(err)
+// 			} else {
+// 				result[file] = ast
+// 			}
+// 		}
+// 	}
 
-	return result
-}
+// 	return result
+// }

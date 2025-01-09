@@ -10,11 +10,14 @@ import (
 	"os"
 	"path"
 
+	"github.com/alecthomas/kong"
 	"github.com/soerenkoehler/go-util-mutation/common"
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
 func main() {
+	println(kong.Kong)
+
 	util.InitLogger(os.Stdout)
 	util.SetLogLevel(util.LOG_DEBUG)
 

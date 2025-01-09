@@ -2,11 +2,9 @@ package common
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
@@ -21,13 +19,6 @@ var (
 	//go:embed defaultConfig.json
 	_defaultConfiguration []byte
 )
-
-type ConfigData struct {
-	Copy       []string
-	DontMutate []string
-}
-
-var Config *ConfigData
 
 func InitWorkspace(configFile string) (err error) {
 	if _, err = os.Stat(WorkDir); os.IsNotExist(err) {
@@ -72,28 +63,4 @@ func TestRunner() (proc *exec.Cmd) {
 	proc = exec.Command("go", "test", "./...")
 	proc.Dir = MutationDir
 	return
-}
-
-func (cfg *ConfigData) load(filename string) (err error) {
-	if path.Ext(filename) == "" {
-		filename += ".json"
-	}
-	configFile := path.Join(WorkDir, filename)
-
-	if _, err = os.Stat(configFile); os.IsNotExist(err) {
-		util.Debug("Initialize configuration file %s", configFile)
-		err = os.WriteFile(configFile, _defaultConfiguration, 0644)
-	}
-
-	if err != nil {
-		return
-	}
-
-	data, err := os.ReadFile(configFile)
-
-	if err != nil {
-		return
-	}
-
-	return json.Unmarshal(data, &Config)
 }

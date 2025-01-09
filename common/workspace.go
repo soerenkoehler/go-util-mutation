@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 
 	"github.com/soerenkoehler/go-util-mutation/util"
@@ -49,7 +50,21 @@ func InitMutationDir() (err error) {
 			}
 		}
 	}
+
+	if err == nil {
+		util.Debug("Running tests before mutation")
+		if RunTests() != nil {
+			return fmt.Errorf("tests failed on unmutated sources")
+		}
+	}
+
 	return
+}
+
+func RunTests() (err error) {
+	proc := exec.Command("go", "test", "./...")
+	proc.Dir = MutationDir
+	return proc.Run()
 }
 
 func (cfg *ConfigData) load(filename string) (err error) {
@@ -74,8 +89,4 @@ func (cfg *ConfigData) load(filename string) (err error) {
 	}
 
 	return json.Unmarshal(data, &Config)
-}
-
-func GetConfigName() (string, error) {
-	return "", fmt.Errorf("expected at most one argument for CONFIG-NAME")
 }

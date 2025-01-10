@@ -11,13 +11,17 @@ import (
 
 var CLI struct {
 	Verbose    bool   `short:"v" help:"Output diagnostic info."`
-	ConfigFile string `arg:"" help:"Configuration name. Will be created if it does not exist." optional:"true" default:"default"`
+	ConfigFile string `arg:"" optional:"true" default:"${defaultConfigFile}" help:"Optional configuration file name relative to ${workDir}. Will be created if it does not exist. Default value: ${defaultConfigFile}"`
 }
 
 func main() {
 	kong.Parse(
 		&CLI,
-		kong.UsageOnError())
+		kong.UsageOnError(),
+		kong.Vars{
+			"workDir":           common.WorkDir,
+			"defaultConfigFile": common.DefaultConfigFile,
+		})
 
 	util.InitLogger(os.Stdout)
 	if CLI.Verbose {

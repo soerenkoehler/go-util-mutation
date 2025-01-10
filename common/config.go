@@ -16,9 +16,6 @@ type ConfigData struct {
 var Config *ConfigData
 
 func (cfg *ConfigData) load(filename string) (err error) {
-	if path.Ext(filename) == "" {
-		filename += ".json"
-	}
 	configFile := path.Join(WorkDir, filename)
 
 	if _, err = os.Stat(configFile); os.IsNotExist(err) {

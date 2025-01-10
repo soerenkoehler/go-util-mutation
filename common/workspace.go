@@ -12,7 +12,7 @@ import (
 const (
 	WorkDir           = ".go-util-mutation"
 	MutationDir       = WorkDir + "/tmp"
-	ConfigFileDefault = "default.json"
+	DefaultConfigFile = "default.json"
 )
 
 var (

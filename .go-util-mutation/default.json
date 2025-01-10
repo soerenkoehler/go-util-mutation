@@ -1,0 +1,9 @@
+{
+    "copy": [
+        "**/*.go",
+        "common/defaultConfig.json"
+    ],
+    "dontMutate": [
+        "main.go"
+    ]
+}

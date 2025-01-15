@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"io/fs"
 	"os"
+	"path"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/soerenkoehler/go-util-mutation/common"
@@ -48,7 +49,7 @@ func (ctx mutationContext) mutateFile(file string) (err error) {
 }
 
 func (ctx mutationContext) outputFile() (err error) {
-	dst, err := os.Create(ctx.file)
+	dst, err := os.Create(path.Join(ctx.dir, ctx.file))
 
 	if err != nil {
 		return

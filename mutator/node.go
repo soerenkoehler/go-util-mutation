@@ -3,8 +3,6 @@ package mutator
 import (
 	"go/ast"
 	"go/token"
-
-	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
 func (ctx mutationContext) Visit(node ast.Node) ast.Visitor {
@@ -30,9 +28,8 @@ func (ctx mutationContext) Visit(node ast.Node) ast.Visitor {
 func (ctx mutationContext) mutateBasicLit(n *ast.BasicLit) {
 	switch n.Kind {
 	case token.STRING:
-		util.Debug("%v\n", n.Value)
 		n.Value = `"mutated"`
-		ctx.outputFile()
+		ctx.testMutation("mutate string", n.Pos())
 	}
 }
 

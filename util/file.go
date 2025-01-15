@@ -11,6 +11,7 @@ import (
 
 func GlobCopy(srcDir, dstDir, pattern string) (err error) {
 	files, err := doublestar.Glob(os.DirFS(srcDir), pattern)
+
 	for _, file := range files {
 		if err == nil {
 			if isDir, copyErr := copyFile(srcDir, dstDir, file); isDir {
@@ -30,9 +31,11 @@ func copyFile(srcDir, dstDir, file string) (isDir bool, err error) {
 	if err != nil {
 		return
 	}
+
 	if sfi.IsDir() {
 		return true, nil
 	}
+
 	if !sfi.Mode().IsRegular() {
 		return false, fmt.Errorf(
 			"CopyFile: non-regular source file %s (%q)",
@@ -75,12 +78,14 @@ func copyFileContents(src, dst string) (err error) {
 	if err != nil {
 		return
 	}
+
 	defer in.Close()
 
 	out, err := os.Create(dst)
 	if err != nil {
 		return
 	}
+
 	defer func() {
 		cerr := out.Close()
 		if err == nil {
@@ -91,6 +96,7 @@ func copyFileContents(src, dst string) (err error) {
 	if _, err = io.Copy(out, in); err != nil {
 		return
 	}
+
 	err = out.Sync()
 
 	return

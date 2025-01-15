@@ -2,6 +2,7 @@ package mutator
 
 import (
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
 	"io/fs"
@@ -12,34 +13,47 @@ import (
 	"github.com/soerenkoehler/go-util-mutation/util"
 )
 
-func MutateFiles() error {
+func (ctx mutationContext) MutateFiles() error {
 	return doublestar.GlobWalk(
-		os.DirFS(common.MutationDir),
+		os.DirFS(ctx.dir),
 		"**/*.go",
 		func(path string, d fs.DirEntry) (err error) {
 			for _, pattern := range common.Config.DontMutate {
-				match, err := doublestar.Match(pattern, path)
-				if err != nil {
-					return err
+				var match bool
+				if match, err = doublestar.Match(pattern, path); err != nil {
+					return
 				}
 				if !match {
-					err = mutateFile(path)
+					err = ctx.mutateFile(path)
 				}
 			}
-			return nil
+			return
 		},
 		doublestar.WithFilesOnly())
 }
 
-func mutateFile(file string) (err error) {
+func (ctx mutationContext) mutateFile(file string) (err error) {
 	util.Debug("Mutating %s", file)
 
-	root, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+	ctx.file = file
+	ctx.root, err = parser.ParseFile(token.NewFileSet(), ctx.file, nil, 0)
+
 	if err != nil {
-		util.Fatal("parsing %v: %v", file, err)
+		util.Fatal("parsing %v: %v", ctx.file, err)
 	}
 
-	ast.Walk(nodeMutator{}, root)
+	ast.Walk(ctx, ctx.root)
 
 	return
+}
+
+func (ctx mutationContext) outputFile() (err error) {
+	dst, err := os.Create(ctx.file)
+
+	if err != nil {
+		return
+	}
+	defer dst.Close()
+
+	return format.Node(dst, token.NewFileSet(), ctx.root)
 }

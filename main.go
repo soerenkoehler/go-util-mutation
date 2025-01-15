@@ -37,7 +37,7 @@ func main() {
 	}
 
 	if err == nil {
-		err = mutator.MutateFiles()
+		err = mutator.New(common.MutationDir).MutateFiles()
 	}
 
 	if err != nil {

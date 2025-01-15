@@ -9,6 +9,8 @@ import (
 
 func (ctx mutationContext) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
+	case *ast.ImportSpec:
+		return nil
 	case *ast.BasicLit:
 		ctx.mutateBasicLit(n)
 		// case *ast.BinaryExpr:
@@ -29,8 +31,8 @@ func (ctx mutationContext) mutateBasicLit(n *ast.BasicLit) {
 	switch n.Kind {
 	case token.STRING:
 		util.Debug("%v\n", n.Value)
+		n.Value = `"mutated"`
 		ctx.outputFile()
-		return
 	}
 }
 

@@ -26,11 +26,25 @@ func (ctx mutationContext) Visit(node ast.Node) ast.Visitor {
 }
 
 func (ctx mutationContext) mutateBasicLit(n *ast.BasicLit) {
+	old := n.Value
+
+	testMutatedBasicLit := func(value string) {
+		if value != old {
+			ctx.testMutation("mutate string", n.Pos())
+		}
+	}
+
 	switch n.Kind {
 	case token.STRING:
-		n.Value = `"mutated"`
-		ctx.testMutation("mutate string", n.Pos())
+		testMutatedBasicLit(`""`)
+		testMutatedBasicLit(`"mutated"`)
+	case token.INT:
 	}
+
+	n.Value = old
+
+	a := 00
+	println(a)
 }
 
 // func mutateBinaryExpr(n *ast.BinaryExpr) ast.Visitor {
